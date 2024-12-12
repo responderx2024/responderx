@@ -68,6 +68,7 @@
                 <label for="media" class="block text-sm font-medium text-gray-700">Upload Media (Images, Videos):</label>
                 <div id="mediaOptions" class="mt-1 mb-2">
                     <input type="file" id="media" name="media" accept="image/*,video/*" onchange="previewMedia()" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <button type="button" onclick="openCamera()" class="mt-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105">Take Photo</button>
                 </div>
                 <div class="media-display" id="mediaDisplay"></div>
             </div>
@@ -78,10 +79,20 @@
         </form>
     </div>
 
+    <!-- Webcam Modal -->
+    <div id="webcamModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 z-20 flex items-center justify-center hidden">
+        <div class="bg-white p-4 rounded-lg shadow-lg">
+            <video id="webcam" autoplay class="w-full h-auto"></video>
+            <button onclick="capturePhoto()" class="mt-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105">Capture Photo</button>
+            <button onclick="closeWebcam()" class="mt-2 px-4 py-2 bg-red-600 text-white font-semibold rounded-md shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-transform transform hover:scale-105">Close</button>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         let map;
         let marker;
+        let webcamStream;
 
         function initMap() {
             map = L.map('map').setView([51.505, -0.09], 13);
@@ -212,6 +223,54 @@
                 };
                 reader.readAsDataURL(file);
             }
+        }
+
+        function openCamera() {
+            const webcamModal = document.getElementById('webcamModal');
+            const webcam = document.getElementById('webcam');
+
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    webcamStream = stream;
+                    webcam.srcObject = stream;
+                    webcamModal.classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Error accessing webcam:', error);
+                });
+        }
+
+        function capturePhoto() {
+            const webcam = document.getElementById('webcam');
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            canvas.width = webcam.videoWidth;
+            canvas.height = webcam.videoHeight;
+            context.drawImage(webcam, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(blob => {
+                const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+                const mediaInput = document.getElementById('media');
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                mediaInput.files = dataTransfer.files;
+
+                previewMedia();
+                closeWebcam();
+            }, 'image/jpeg');
+        }
+
+        function closeWebcam() {
+            const webcamModal = document.getElementById('webcamModal');
+            const webcam = document.getElementById('webcam');
+
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(track => track.stop());
+            }
+
+            webcam.srcObject = null;
+            webcamModal.classList.add('hidden');
         }
 
         document.getElementById('incidentForm').addEventListener('submit', async (e) => {
