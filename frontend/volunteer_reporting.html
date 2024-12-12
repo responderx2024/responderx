@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Reporting and Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <nav class="bg-blue-900 p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="text-white text-2xl font-bold">ResponderX</div>
+            <div>
+                <a href="/dashboard" class="text-white px-4 py-2 hover:bg-blue-700 rounded text-lg">Home</a>
+                <a href="/reports" class="text-white px-4 py-2 hover:bg-blue-700 rounded text-lg">View Reports</a>
+            </div>
+            <div>
+                <input type="call a volunteer" value="call" class="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-50">
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto mt-10">
+        <h1 class="text-5xl font-bold text-center text-gray-800 mb-10">Incident Reporting and Management</h1>
+        <form id="incidentForm" class="bg-white p-8 rounded-lg shadow-lg space-y-6" enctype="multipart/form-data">
+            <div>
+                <label for="description" class="block text-2xl font-medium text-gray-700">Description of Incident:</label>
+                <textarea id="description" name="description" rows="4" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-lg"></textarea>
+            </div>
+           
+            <div>
+                <label for="type" class="block text-2xl font-medium text-gray-700">Type of Disaster:</label>
+                <select id="type" name="type" onchange="updateRequirements()" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <option value="">Select Type</option>
+                    <option value="earthquake">Earthquake</option>
+                    <option value="flood">Flood</option>
+                    <option value="hurricane">Hurricane</option>
+                    <option value="fire">Fire</option>
+                    <option value="landslide">Landslide</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div id="requirements" class="checkbox-group"></div>
+
+            <div>
+                <label for="location" class="block text-2xl font-medium text-gray-700">Location:</label>
+                <button type="button" onclick="getLocation()" class="mt-1 mb-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105">Use Current Location</button>
+                <input type="text" id="location" name="location" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+
+            <div id="map" class="h-64 w-full rounded-lg shadow mb-6"></div>
+
+            <div>
+                <label for="incidentDate" class="block text-2xl font-medium text-gray-700">Date and Time:</label>
+                <button type="button" onclick="setCurrentDateTime()" class="mt-1 mb-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105">Use Current Date and Time</button>
+                <input type="datetime-local" id="incidentDate" name="incidentDate" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+
+            <div>
+                <label for="numVictims" class="block text-2xl font-medium text-gray-700">Number of Victims</label>
+                <input type="number" id="numVictims" name="numVictims" min="1" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Enter the number of victims">
+            </div>
+            <div>
+                <label for="numVictims" class="block text-2xl font-medium text-gray-700">Number of Victims injured</label>
+                <input type="number" id="numVictims" name="numVictims" min="1" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="number of victims injured">
+            </div>
+            
+            <div>
+                <label for="numVolunteers" class="block text-2xl font-medium text-gray-700">phone number</label>
+                <input type="number" id="numVolunteers" name="numVolunteers" min="1" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Enter the number of phone number">
+            </div>
+            <div class="mb-4">
+                <label for="missingPerson" class="block text-2xl font-medium text-gray-700 mb-2">
+                    Missing Person Details
+                </label>
+                <div>
+                    <input type="checkbox" id="missingChild" name="missingPerson[]" value="Child">
+                    <label for="missingChild" class="text-gray-600">Child</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="missingAdult" name="missingPerson[]" value="Adult">
+                    <label for="missingAdult" class="text-gray-600">Adult</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="missingElderly" name="missingPerson[]" value="Elderly">
+                    <label for="missingElderly" class="text-gray-600">Elderly</label>
+                </div>
+                <div class="mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Report Missing Person</h2>
+                    
+                    <div class="mb-4">
+                        <label for="personName" class="block text-lg font-medium text-gray-700">
+                            Name
+                        </label>
+                        <input type="text" id="personName" name="personName" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Enter full name">
+                    </div>
+                
+                    <div class="mb-4">
+                        <label for="personAge" class="block text-lg font-medium text-gray-700">
+                            Age
+                        </label>
+                        <input type="number" id="personAge" name="personAge" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Enter age">
+                    </div>
+                
+                    <div class="mb-4">
+                        <label class="block text-lg font-medium text-gray-700">
+                            Gender
+                        </label>
+                        <div class="flex items-center space-x-4">
+                            <div>
+                                <input type="radio" id="male" name="personGender" value="Male" class="mr-2">
+                                <label for="male" class="text-gray-600">Male</label>
+                            </div>
+                            <div>
+                                <input type="radio" id="female" name="personGender" value="Female" class="mr-2">
+                                <label for="female" class="text-gray-600">Female</label>
+                            </div>
+                            <div>
+                                <input type="radio" id="other" name="personGender" value="Other" class="mr-2">
+                                <label for="other" class="text-gray-600">Other</label>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="mb-4">
+                        <label for="lastSeenLocation" class="block text-lg font-medium text-gray-700">
+                            Last Seen Location
+                        </label>
+                        <input type="text" id="lastSeenLocation" name="lastSeenLocation" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Enter location details">
+                    </div>
+                
+                    <div class="mb-4">
+                        <label for="contactDetails" class="block text-lg font-medium text-gray-700">
+                            Contact Details
+                        </label>
+                        <input type="text" id="contactDetails" name="contactDetails" class="text-lg px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your contact number or email">
+                    </div>
+                
+                    <div class="mb-4">
+                        <label for="additionalDetails" class="block text-lg font-medium text-gray-700">
+                            Additional Information
+                        </label>
+                        <textarea id="additionalDetails" name="additionalDetails" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Provide any other relevant details"></textarea>
+                    </div>
+            
+                    <div>
+                        <label for="media" class="block text-sm font-medium text-gray-700">Upload Media (Images, Videos):</label>
+                        <div id="mediaOptions" class="mt-1 mb-2">
+                            <input type="file" id="media" name="media" accept="image/*,video/*" onchange="previewMedia()" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            <button type="button" onclick="openCamera()" class="mt-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105">Take Photo</button>
+                        </div>
+                        <div class="media-display" id="mediaDisplay"></div>
+                    </div>
+                
+                    
+                </div>
+                
+                <script>
+                    document.getElementById('media').addEventListener('change', function() {
+                        const mediaInput = this;
+                        const mediaDisplay = document.getElementById('mediaDisplay');
+                        const file = mediaInput.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const mediaElement = document.createElement(file.type.startsWith('image') ? 'img' : 'video');
+                                mediaElement.src = e.target.result;
+                                mediaElement.classList.add('max-w-full', 'rounded');
+                                mediaElement.controls = true;
+                                mediaDisplay.innerHTML = '';
+                                mediaDisplay.appendChild(mediaElement);
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+
+                    function previewMedia() {
+                        const mediaInput = document.getElementById('media');
+                        const mediaDisplay = document.getElementById('mediaDisplay');
+                        mediaDisplay.innerHTML = ''; // Clear previous media preview
+            
+                        const file = mediaInput.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const mediaType = file.type.startsWith('image') ? 'image' : 'video';
+                                const mediaElement = document.createElement(mediaType);
+                                mediaElement.src = e.target.result;
+                                if (mediaType === 'video') {
+                                    mediaElement.controls = true;
+                                }
+                                mediaDisplay.appendChild(mediaElement);
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    }
+                </script>
+                
+            </div>
+
+            <div id="webcamModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 z-20 flex items-center justify-center hidden">
+                <div class="bg-white p-4 rounded-lg shadow-lg">
+                    <video id="webcam" autoplay class="w-full h-auto"></video>
+                    <button onclick="capturePhoto()" class="mt-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105">Capture Photo</button>
+                    <button onclick="closeWebcam()" class="mt-2 px-4 py-2 bg-red-600 text-white font-semibold rounded-md shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-transform transform hover:scale-105">Close</button>
+                </div>
+            </div>
+            
+
+            <div>
+                <label for="severity" class="block text-lg font-medium text-gray-700">Severity Level:</label>
+                <select id="severity" name="severity" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <option value="minor">Minor</option>
+                    <option value="major">Major</option>
+                    <option value="critical">Critical</option>
+                </select>
+            </div>
+
+            <div>
+                <input type="submit" value="Report Incident" class="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105">
+            </div>
+        </form>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        let map;
+        let marker;
+
+        function initMap() {
+            map = L.map('map').setView([51.505, -0.09], 13);
+
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            map.on('click', function(event) {
+                placeMarker(event.latlng);
+                document.getElementById('location').value = `Latitude: ${event.latlng.lat}, Longitude: ${event.latlng.lng}`;
+            });
+        }
+
+        function placeMarker(location) {
+            if (marker) {
+                marker.setLatLng(location);
+            } else {
+                marker = L.marker(location).addTo(map);
+            }
+            map.setView(location);
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    let latitude = position.coords.latitude;
+                    let longitude = position.coords.longitude;
+                    document.getElementById('location').value = `Latitude: ${latitude}, Longitude: ${longitude}`;
+                    let currentLocation = L.latLng(latitude, longitude);
+                    placeMarker(currentLocation);
+                    map.setView(currentLocation);
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function setCurrentDateTime() {
+    const now = new Date();
+    
+    // Get the local date and time in ISO format
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    
+    // Format as 'YYYY-MM-DDTHH:MM'
+    const datetimeLocal = `${year}-${month}-${day}T${hours}:${minutes}`;
+    
+    // Set the value of the input field to the local date-time
+    document.getElementById('incidentDate').value = datetimeLocal;
+}
+
+
+        function updateRequirements() {
+            const disasterType = document.getElementById('type').value;
+            const requirementsDiv = document.getElementById('requirements');
+            let requirements = [];
+
+            switch (disasterType) {
+                case 'earthquake':
+                    requirements = [
+                        'Search and rescue teams',
+                        'Medical assistance and first aid',
+                        'Temporary shelter and food'
+                    ];
+                    break;
+                case 'flood':
+                    requirements = [
+                        'Evacuation of affected areas',
+                        'Emergency food and water supplies',
+                        'Medical care for flood-related injuries',
+                        'Boats and other water transport for rescue'
+                    ];
+                    break;
+                case 'hurricane':
+                    requirements = [
+                        'Temporary shelters',
+                        'Water and food supplies',
+                        'Power generators'
+                    ];
+                    break;
+                case 'fire':
+                    requirements = [
+                        'Firefighting equipment and teams',
+                        'Evacuation assistance',
+                        'Medical teams'
+                    ];
+                    break;
+                case 'landslide':
+                    requirements = [
+                        'Rescue teams for trapped individuals',
+                        'Medical supplies',
+                        'Evacuation'
+                    ];
+                    break;
+                case 'other':
+                    requirements = [
+                        'Specify needs in the description'
+                    ];
+                    break;
+                default:
+                    requirements = [];
+            }
+
+            let checkboxes = '';
+            requirements.forEach((requirement, index) => {
+                checkboxes += `
+                    <div class="flex items-center">
+                        <input type="checkbox" id="requirement${index}" name="requirements[]" value="${requirement}" class="mr-2">
+                        <label for="requirement${index}" class="text-sm text-gray-700">${requirement}</label>
+                    </div>
+                `;
+            });
+
+            requirementsDiv.innerHTML = checkboxes;
+        }
+
+        function capturePhoto() {
+            const webcam = document.getElementById('webcam');
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            canvas.width = webcam.videoWidth;
+            canvas.height = webcam.videoHeight;
+            context.drawImage(webcam, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(blob => {
+                const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+                const mediaInput = document.getElementById('media');
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                mediaInput.files = dataTransfer.files;
+
+                previewMedia();
+                closeWebcam();
+            }, 'image/jpeg');
+        }
+        
+        function openCamera() {
+            const webcamModal = document.getElementById('webcamModal');
+            const webcam = document.getElementById('webcam');
+
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    webcamStream = stream;
+                    webcam.srcObject = stream;
+                    webcamModal.classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Error accessing webcam:', error);
+                });
+        }
+
+        function closeWebcam() {
+            const webcamModal = document.getElementById('webcamModal');
+            const webcam = document.getElementById('webcam');
+
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(track => track.stop());
+            }
+
+            webcam.srcObject = null;
+            webcamModal.classList.add('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', initMap);
+    </script>
+</body>
+</html>
