@@ -1,4 +1,4 @@
-# RespoderX - Crowd-Sourced Disaster Response Coordination Platform
+# ResponderX - Crowd-Sourced Disaster Response Coordination Platform
 
 ## Overview
 ResponderX a crowd-Sourced Disaster Response Coordination Platform is an innovative solution designed to improve disaster response efficiency by leveraging real-time data contributed by citizens and organizations. This platform facilitates collaboration between volunteers, administrators, and government agencies to ensure timely and effective disaster management.
