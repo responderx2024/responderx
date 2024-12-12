@@ -42,6 +42,10 @@ app.get('/volunteer_dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, './frontend/volunteer_dashboard.html'));
 });
 
+app.get('/volunteer_reporting', (req, res) => {
+  res.sendFile(path.join(__dirname, './frontend/volunteer_reporting.html'));
+});
+
 app.get('/submit_report', (req, res) => {
   res.sendFile(path.join(__dirname, './frontend/incident_reporting.html'));
 });
